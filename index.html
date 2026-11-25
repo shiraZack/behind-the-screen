@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Behind the Screen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Unbounded:wght@600;800&display=swap">
+<style>
+/* Layout: one quiet column over a live point-field; one engraved card per layer carries the identity */
+:root{--bg:#04051a;--surf:#0b0d2b;--hi:#1a1e4d;--lo:#01020e;--fg:#f1f2ff;--mut:#b3b8e2;--l7:#5b8cff;--l6:#a974ff;--l5:#5fe0c4;--act:#ff9d42;--c:var(--act);--no:#ffb3a1;
+--body:Rubik,"Segoe UI",Arial,sans-serif;--disp:Unbounded,Rubik,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+nav{min-width:0}
+main{grid-template-columns:minmax(0,1fr)}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font:400 18px/1.65 var(--body);direction:rtl;min-height:100vh;overflow-x:hidden}
+#space{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#portal{position:fixed;inset:0;z-index:50;background:#02030f;visibility:hidden;opacity:0;transition:opacity .45s,visibility .45s}
+#portal.on{visibility:visible;opacity:1}
+#portal canvas{width:100%;height:100%;display:block}
+#portal .cap{position:absolute;inset-inline:16px;bottom:11%;text-align:center;font-weight:700;font-size:clamp(20px,3vw,32px);color:var(--c);text-shadow:0 0 24px var(--c)}
+#portal button{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom,0px));left:max(24px,env(safe-area-inset-left,0px))}
+header,main{position:relative;z-index:1;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:rgba(4,5,26,.9);padding-block:12px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.brand{font:800 13px/1.1 var(--disp);direction:ltr;text-align:left}
+nav ol{display:flex;gap:8px;list-style:none;margin:0;padding:4px;overflow-x:auto}
+nav button{font:500 14px var(--body);color:var(--mut);background:none;border:0;border-radius:99px;padding:8px 14px;white-space:nowrap;cursor:pointer}
+nav button[aria-current]{color:var(--fg);background:var(--surf);box-shadow:inset 3px 3px 7px var(--lo),inset -2px -2px 6px var(--hi)}
+nav button:disabled{opacity:.5;cursor:not-allowed}
+main{max-width:1080px;margin:auto;padding-block:56px 96px;display:grid;gap:56px}
+h1,h2,h3,p{margin:0;text-wrap:pretty}
+h1{font-size:clamp(34px,5.4vw,60px);line-height:1.12;font-weight:800;text-wrap:balance}
+h1:focus{outline:0}
+h2{font-size:26px;line-height:1.3}
+h3{font-size:19px}
+.lead{font-size:20px;color:var(--mut);max-width:58ch}
+.tint{color:var(--c)}
+.mut{color:var(--mut)}
+:focus-visible{outline:3px solid var(--act);outline-offset:3px}
+.panel{background:var(--surf);border-radius:28px;padding:clamp(22px,3.4vw,40px);box-shadow:12px 12px 30px var(--lo),-6px -6px 22px rgba(60,68,160,.2);display:grid;gap:24px;min-width:0}
+.btn{font:700 18px var(--body);border:0;border-radius:18px;padding:16px 30px;background:var(--act);color:#231000;cursor:pointer;box-shadow:0 0 28px rgba(255,157,66,.3);transition:transform .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px)}
+.btn:disabled{background:#20234b;color:#a0a5d0;box-shadow:none;cursor:not-allowed}
+.btn.soft{background:var(--surf);color:var(--fg);font-size:16px;padding:12px 22px;box-shadow:5px 5px 14px var(--lo),-3px -3px 10px var(--hi)}
+.row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+/* home */
+.home{min-height:74vh;place-content:center;justify-items:center;text-align:center;gap:28px}
+.logo{direction:ltr;font-family:var(--disp);font-weight:800;line-height:1;margin:0}
+.logo .a{display:block;font-size:clamp(21px,5vw,58px);margin-bottom:.15em}
+.logo .b{display:block;font-size:clamp(42px,11.4vw,132px);letter-spacing:-.02em}
+.grad{background:linear-gradient(100deg,var(--l7),var(--l6),var(--l5),var(--l7),var(--l6));background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:flow 9s linear infinite}
+.mirror{display:block;font:800 clamp(42px,11.4vw,132px)/1 var(--disp);letter-spacing:-.02em;direction:ltr;transform:scaleY(-1);opacity:.42;filter:blur(2px);-webkit-mask:linear-gradient(to top,#000,transparent 62%);mask:linear-gradient(to top,#000,transparent 62%);margin-top:-.24em;margin-bottom:-.3em;pointer-events:none}
+@keyframes flow{to{background-position:-300% 0}}
+/* engraved card */
+.hero{display:grid;grid-template-columns:1fr auto;gap:56px;align-items:center}
+.hero>div:first-child{display:grid;gap:18px}
+.card{width:230px;aspect-ratio:5/7;border-radius:26px;position:relative;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 26%,#0b0d2b),color-mix(in srgb,var(--c) 9%,#0b0d2b));box-shadow:14px 14px 34px var(--lo),-7px -7px 24px color-mix(in srgb,var(--c) 24%,transparent);display:grid;place-items:center;transition:transform .35s}
+.card:hover{transform:perspective(700px) rotateY(-9deg) rotateX(4deg)}
+.card::before{content:"";position:absolute;inset:13px;border-radius:17px;box-shadow:inset 4px 4px 9px rgba(0,0,20,.55),inset -3px -3px 8px color-mix(in srgb,var(--c) 30%,transparent)}
+.card b{position:absolute;font:800 22px/1 var(--disp);color:var(--c);top:28px;right:28px}
+.card b~b{inset:auto auto 28px 28px;transform:rotate(180deg)}
+.card svg{width:56%;fill:none;stroke:color-mix(in srgb,var(--c) 42%,#03041a);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(1.6px 1.8px 0 color-mix(in srgb,var(--c) 75%,white)) drop-shadow(-1.5px -1.5px 1px rgba(0,0,15,.85))}
+.face .card svg{width:auto;height:74%}
+.card i{position:absolute;bottom:54px;font:700 17px var(--body)}
+.cards{display:flex;flex-wrap:wrap;justify-content:center;gap:36px}
+/* roles */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.three .panel{padding:26px;gap:8px;align-content:start}
+blockquote{margin:0;font-size:21px;line-height:1.5}
+/* film */
+.film{display:grid;gap:18px}
+.film canvas{width:100%;aspect-ratio:16/8;border-radius:20px;background:#03041a;box-shadow:inset 6px 6px 18px var(--lo),inset -4px -4px 14px rgba(70,80,180,.22);display:block}
+.film .capt{min-height:3.3em;font-size:20px;font-weight:500;text-align:center;max-width:50ch;margin:auto}
+.bar{height:8px;border-radius:9px;background:var(--lo);overflow:hidden;flex:1;min-width:120px}
+.bar span{display:block;height:100%;width:0;background:var(--c)}
+/* practice */
+.opts{display:grid;gap:14px}
+.opt{font:400 17px/1.5 var(--body);text-align:right;color:var(--fg);background:var(--surf);border:2px solid transparent;border-radius:16px;padding:15px 20px;cursor:pointer;box-shadow:5px 5px 13px var(--lo),-3px -3px 10px var(--hi)}
+.opt[aria-checked=true],.opt[aria-pressed=true]{border-color:var(--c);box-shadow:inset 4px 4px 10px var(--lo),inset -3px -3px 8px var(--hi)}
+.opt:disabled{cursor:default;opacity:.75}
+.fb{border-radius:16px;padding:16px 20px;background:#060720;border:2px solid}
+.fb.ok{border-color:var(--l5)}.fb.no{border-color:var(--no)}
+.fb strong{display:block}.ok strong{color:var(--l5)}.no strong{color:var(--no)}
+.mrow{display:grid;grid-template-columns:1fr 210px;gap:12px 20px;align-items:center}
+.mrow .fb{grid-column:1/-1}
+select{font:500 17px var(--body);color:var(--fg);background:var(--surf);border:2px solid #343a7c;border-radius:14px;padding:12px;width:100%}
+.sample{font-size:24px;line-height:1.9;background:#060720;border-radius:18px;padding:22px 26px;overflow-wrap:anywhere;font-weight:500}
+.gate{justify-items:center;text-align:center}
+.checks{display:flex;flex-wrap:wrap;gap:10px 28px;justify-content:center;list-style:none;margin:0;padding:0;color:var(--mut)}
+.checks li::before{content:"○ "}.checks li.y{color:var(--l5)}.checks li.y::before{content:"✓ "}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:620px}
+th,td{text-align:right;padding:16px 18px;vertical-align:top;border-bottom:1px solid #262b62}
+thead th{font-size:20px}
+/* ticket + stack */
+.compose{max-width:640px;margin:auto;width:100%}
+.compose canvas{width:100%;max-width:380px;border-radius:14px;display:block}
+.stackwrap{display:grid;grid-template-columns:1fr 280px;gap:36px;align-items:center}
+.stage{height:560px;perspective:1300px;display:grid;place-items:center;direction:ltr;min-width:0}
+.stk{width:340px;height:226px;position:relative;transform-style:preserve-3d}
+.slab{position:absolute;inset:0;transform-style:preserve-3d}
+.slab u{position:absolute;inset:0;border-radius:18px;background:color-mix(in srgb,var(--c) 45%,#03041a);text-decoration:none}
+.slab .face{position:absolute;inset:0;border-radius:18px;overflow:hidden;background:linear-gradient(145deg,color-mix(in srgb,var(--c) 78%,#0b0d2b),color-mix(in srgb,var(--c) 42%,#0b0d2b));box-shadow:0 0 34px color-mix(in srgb,var(--c) 45%,transparent);display:grid;place-items:center}
+.slab canvas{width:100%;height:100%}
+.legend{display:grid;gap:22px;list-style:none;margin:0;padding:0}
+.legend li{opacity:var(--o,.15)}
+.legend b{color:var(--c);display:block;font-size:20px}
+input[type=range]{flex:1;min-width:140px;accent-color:var(--act);direction:rtl}
+.bx{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;min-height:430px;align-content:start}
+.duo{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center}
+.duoa{display:grid;gap:8px;text-align:center;color:var(--mut);font-weight:500}
+.box{border-radius:20px;padding:24px;display:grid;gap:8px;justify-items:center;text-align:center;background:var(--surf);box-shadow:inset 5px 5px 13px var(--lo),inset -3px -3px 10px var(--hi)}
+.box b{color:var(--c);font-size:20px}.ic{width:64px;fill:none;stroke:var(--c);stroke-width:6;stroke-linejoin:round}
+.tower{display:grid;gap:9px;max-width:460px}.tower .opt{padding:9px 18px}
+#updown{width:100%;height:380px;display:block}
+.terms{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin:0}.terms dt{font-weight:700;color:var(--c)}.terms dd{margin:0}
+.btn.snd{font-size:14px;padding:8px 14px;white-space:nowrap;flex:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:60;background:#20245a;border-radius:14px;padding:12px 22px;max-width:92vw}
+@media(max-width:800px){body{font-size:17px}.hero,.stackwrap,.three,.mrow,.terms,.duo{grid-template-columns:1fr}.hero .card{justify-self:center;grid-row:1;width:180px}main{gap:40px;padding-block:32px 72px}.stage{height:400px}.stk{scale:.74}.brand{font-size:10px}header{flex-wrap:wrap;gap:8px}nav{order:3;width:100%}.film canvas{aspect-ratio:4/3}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="space" aria-hidden="true"></canvas>
+<header><div class="brand">BEHIND<br>THE SCREEN</div><nav aria-label="שלבי הלמידה"><ol id="nav"></ol></nav><button class="btn soft snd" id="snd-toggle" aria-pressed="true">צליל פועל</button></header>
+<main id="app"></main>
+<div id="portal" aria-hidden="true"><canvas></canvas><div class="cap"></div><button class="btn soft" id="skip">דילוג על המעבר</button></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const COL={7:'#5b8cff',6:'#a974ff',5:'#5fe0c4',0:'#ff9d42'};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a)),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,lerp=(a,b,t)=>a+(b-a)*t;
+const pick=a=>a[Math.random()*a.length|0];
+/* ---------- state ---------- */
+const PAGES=[['home','בית'],['basics','יסודות'],['send','שליחה'],['layer7','שכבה 7'],['layer6','שכבה 6'],['layer5','שכבה 5'],['compare','השוואה'],['tickets','פניות'],['finish','סיום']];
+let S={max:0,done:{}};
+try{const s=JSON.parse(localStorage.getItem('bts2'));if(s&&s.done)S=s}catch(e){}
+const save=()=>{try{localStorage.setItem('bts2',JSON.stringify(S))}catch(e){}};
+const NEED={basics:['bsteps','qb'],send:['film-send'],layer7:['film-7','g7','q7'],layer6:['film-6','g6','q6'],layer5:['film-5','g5','q5'],compare:['gc'],tickets:['t1','t2','t3','t4','t5']};
+const LBL={bsteps:'חמשת היסודות',qb:'שאלה','film-send':'צפייה בפירוק המסך','film-7':'סרטון','film-6':'סרטון','film-5':'סרטון',g7:'משחק',g6:'משחק',g5:'משחק',q7:'שאלה',q6:'שאלה',q5:'שאלה',gc:'התאמה מלאה',t1:'פנייה 1',t2:'פנייה 2',t3:'פנייה 3',t4:'פנייה 4',t5:'פנייה 5'};
+let cur=0,loops=[];
+function finish(k){if(!S.done[k]){S.done[k]=1;save();Snd.play('ok')}paintGate()}
+/* ---------- content ---------- */
+const ICON={7:'<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="16" width="84" height="62" rx="9"/><path d="M8 34h84M50 88V50M36 62l14-13 14 13"/></svg>',
+6:'<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 92 50 50 92 8 50zM29 29l42 42M71 29 29 71M50 8v84M8 50h84"/></svg>',
+5:'<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="17" cy="66" r="11"/><circle cx="83" cy="66" r="11"/><path d="M17 55C22 14 78 14 83 55M28 66h44M50 25v41"/></svg>'};
+const NAME={7:'הדלפק',6:'הפריזמה',5:'הגשר'};
+const card=n=>`<div class="card" style="--c:${COL[n]}" role="img" aria-label="קלף שכבה ${n}, ${NAME[n]}"><b>${n}</b>${ICON[n]}<i>${NAME[n]}</i><b aria-hidden="true">${n}</b></div>`;
+const L={
+7:{trail:'המסע מתחיל כאן. צילום המסך צורף לפנייה, והיישום רוצה לשלוח אותו לשרת.',terms:[['יישום', 'תוכנה שמשתמשים בה, כמו דפדפן או תוכנת דואר.'], ['פרוטוקול', 'כללים מוסכמים לתקשורת.'], ['כתובת IP', 'מספר שמזהה יעד ברשת, למשל שרת.']],t:'שכבת היישום',en:'Application',lead:'הדלפק של הרשת: כאן יישומים מבקשים שירותי תקשורת ומקבלים תשובה.',
+ roles:[['HTTP','בקשות ותשובות, למשל לפתיחת דף.'],['SMTP','שליחה והעברה של דואר אלקטרוני.'],['DNS','בירור כתובת לפי שם, כמו שם של אתר.']],
+ note:'הדפדפן משתמש בשירותי השכבה, אבל הוא לא השכבה עצמה. הכפתורים והעיצוב הם ממשק.',
+ tk:['אתרים אחרים נפתחים, אבל במערכת הארגונית מופיעה שגיאה.','מה כתוב בהודעת השגיאה, והאם היא מופיעה גם אצל עובדים נוספים?','נדע מה השירות מדווח, ואם הבעיה משותפת. עדיין אין הוכחה לתקלה בשכבה 7.'],
+ film:['צילום מסך של תקלה מצורף לפנייה. לוחצים על שליחה.','לאיזו כתובת לפנות? DNS מברר את הכתובת לפי שם השרת.','הבקשה יוצאת לפי כללים מוסכמים: פרוטוקול HTTP.','השרת מחזיר תשובה. גם הודעת שגיאה היא תשובה.'],
+ gt:'איזה פרוטוקול מתאים?',q:{c:'שלושה תיאורים של עבודה בדפדפן.',q:'איזה תיאור מדגים שירות תקשורת של שכבת היישום?',a:0,o:[['הדפדפן משתמש ב־HTTP כדי לבקש דף מהשרת.','HTTP מגדיר תקשורת של בקשות ותגובות. זהו שירות תקשורת ליישום.'],['הדפדפן מציג כפתור כחול ולכן הוא שכבה 7.','צבע הכפתור שייך לממשק המשתמש. שכבת היישום עוסקת בשירותי תקשורת, ולא בכל מה שנראה במסך.'],['הטקסט מקודד ב־UTF-8 כדי לייצג אותיות.','UTF-8 מגדיר ייצוג של תווים. כאן חיפשנו את השירות שבאמצעותו מבקשים דף.']]}},
+6:{trail:'בשכבה 7 הוכנה הבקשה. עכשיו השאלה היא באיזו צורה המידע מיוצג.',terms:[['פיקסל', 'נקודת צבע אחת בתמונה.'], ['סיבית', 'ערך אחד: 0 או 1. כך מחשבים מייצגים מידע.'], ['פורמט', 'מבנה מוסכם לקובץ, למשל PNG לתמונה.']],t:'שכבת הייצוג',en:'Presentation',lead:'הפריזמה של הרשת: היא עוסקת בצורת המידע, כדי שהצד השני יוכל לפרש אותו.',
+ roles:[['קידוד','כללים מוסכמים לייצוג, למשל אותיות כמספרים.'],['דחיסה','צמצום נפח הנתונים ופריסתם בצד המקבל.'],['הצפנה','הגנה על התוכן. לקריאה צריך מפתח מתאים.']],
+ note:'קידוד ודחיסה אינם הצפנה. קובץ קטן יותר אינו בהכרח מוגן.',
+ tk:['הקובץ נפתח והמספרים בסדר, אבל השמות בעברית הפכו לסימנים.','באיזו תוכנה הקובץ נוצר, ובאיזו תוכנה פתחת אותו?','נברר אם התוכנות מפרשות את הקובץ אחרת. השיבוש לבדו אינו מוכיח תקלה בשכבה 6.'],
+ film:['כל נקודה בצילום המסך מיוצגת במספרים, לפי פורמט מוסכם.','דחיסה מצמצמת את נפח הנתונים.','הצפנה מגינה על התוכן. בלי מפתח אי אפשר לקרוא אותו.','בצד המקבל: פענוח, פריסה ופירוש לפי אותם כללים.'],
+ gt:'השמות בדוח השתבשו',q:{c:'דוח הורד בהצלחה, ובו שמות משובשים.',q:'איזו בדיקה מתמקדת בייצוג הטקסט?',a:0,o:[['האם הקידוד שבו נפתח הקובץ תואם לקידוד שבו נוצר?','התאמה בין הקידודים נוגעת לפירוש התווים. זו בדיקה רלוונטית, ועדיין צריך לאמת את התוצאה.'],['האם פג תוקף הכניסה למערכת לפני ההורדה?','תוקף הכניסה נוגע להמשך הגישה. כאן הקובץ כבר הורד והשיבוש הוא בתווים.'],['האם כל תוכנת הדפדפן היא שכבת הייצוג?','הדפדפן מבצע תפקידים רבים. שכבת הייצוג היא תפקיד במודל, ולא שם אחר לדפדפן.']]}},
+5:{trail:'המידע כבר מיוצג בצורה מוסכמת. עכשיו השאלה היא איך מתנהלת השיחה.',terms:[['שיחה (Session)', 'מסגרת להחלפת מידע בין שני יישומים.'], ['סנכרון', 'תיאום של נקודה מוסכמת ברצף השיחה.'], ['חיבור לרשת', 'האפשרות לתקשר. היא עדיין לא שיחה פעילה.']],t:'שכבת השיחה',en:'Session',lead:'הגשר של הרשת: הקמה, ניהול וסיום של שיחה בין יישומים.',
+ roles:[['הקמה','יצירת מסגרת להחלפת מידע.'],['ניהול','ארגון ותיאום של חילופי המידע.'],['סיום','סגירה מסודרת של השיחה.']],
+ note:'חיבור לרשת אינו שיחה פעילה עם מערכת, כמו שקו טלפון פנוי אינו שיחה עם נציג.',
+ tk:['השארתי את המערכת פתוחה, וכשחזרתי היא ביקשה שאכנס שוב.','זה קורה רק אחרי זמן ללא שימוש, או גם בזמן עבודה?','נבחין בין סיום פעילות אחרי המתנה לבין ניתוק בזמן עבודה. הסיבה יכולה להיות גם מדיניות אבטחה.'],
+ film:['הקמה: נוצרת מסגרת לשיחה בין שני יישומים.','ניהול: חילופי המידע מתואמים לאורך השיחה.','הפרעה? נקודת סנכרון יכולה לעזור בחידוש, אם המערכת תומכת בכך.','סיום: השיחה נסגרת בצורה מסודרת.'],
+ gt:'סידור שלבי השיחה',q:{c:'שלושה תפקידים אפשריים.',q:'מהו התפקיד של שכבת השיחה לפי מודל OSI?',a:1,o:[['קביעת האופן שבו אותיות מיוצגות בנתונים.','זהו ייצוג של נתונים, של שכבה 6. שכבת השיחה עוסקת בניהול השיחה בין הצדדים.'],['הקמה, תיאום וסיום של שיחה בין יישומים.','שכבת השיחה מארגנת את חילופי המידע לאורך השיחה. היא אינה קובעת כיצד אותיות מיוצגות.'],['הגדרת הודעות לבקשת דף מהשרת.','כללים לבקשת דף הם חלק משירותי התקשורת של שכבה 7. כאן חיפשנו את ניהול השיחה.']]}}};
+const M={
+g7:{opts:['DNS','HTTP','SMTP'],rows:[['מציאת הכתובת של שרת הפניות לפי שמו',0,'DNS מברר כתובת לפי שם.'],['שליחת הפנייה ממערכת בדפדפן אל השרת',1,'HTTP מגדיר בקשות ותשובות בין לקוח לשרת.'],['שליחת הודעת דואר',2,'SMTP משמש לשליחה ולהעברה של דואר.']],hint:['DNS עונה על השאלה איפה השרת נמצא.','HTTP עוסק בבקשות ובתשובות, למשל במערכת בדפדפן.','SMTP קשור לדואר אלקטרוני.'],win:'שלושת הפרוטוקולים במקומם. הבקשה יכולה לצאת לדרך.'},
+gc:{opts:['5 — שיחה','6 — ייצוג','7 — יישום'],rows:[['שני יישומים מסיימים בצורה מסודרת את השיחה ביניהם.',0,'הקמה, ניהול וסיום של שיחה הם תפקידי שכבת השיחה.'],['הצד המקבל מפרש את נתוני הטקסט לפי קידוד מוסכם.',1,'קידוד מגדיר כיצד הנתונים מייצגים תווים. זהו תפקיד של שכבת הייצוג.'],['דפדפן שולח בקשת HTTP לקבלת דף מהשרת.',2,'HTTP מספק כללים לבקשת משאבים ולקבלת תשובות.']],hint:['שכבה 5 מנהלת את השיחה מההתחלה ועד הסוף.','שכבה 6 עוסקת בצורת הנתונים ובפירושם.','שכבה 7 מספקת שירותי תקשורת ליישומים.'],win:'כל ההתאמות נכונות. ההבדל הוא בתפקיד: ניהול השיחה, ייצוג המידע או שירות התקשורת.'}};
+const T=[
+{n:0,s:'היי, אני לא מצליחה להיכנס למערכת ההזמנות. תוכלו לעזור?',q:'מה כדאי לשאול תחילה?',a:0,o:[['״מה קורה בזמן הניסיון להיכנס, ומה נוסח ההודעה?״','התיאור וההודעה יבהירו באיזה שלב הפעולה נעצרה. עדיין אין מספיק מידע כדי להסיק מה הסיבה.'],['״ניסית להתקין מחדש את הדפדפן?״','התקנה מחדש היא פעולה לפני בירור. עדיין לא ידוע אם הדפדפן קשור לפנייה.'],['״אפשר לבדוק אם התקלה בשכבה 5?״','זיהוי שכבה אינו תפקיד המשתמשים. עדיף לשאול מה רואים ומה עשו.']]},
+{n:5,s:'בבוקר נכנסתי ועבדתי כרגיל. אחרי הפסקה חזרתי והופיעה הודעה שהכניסה פגה.',q:'איזה צמד מברר את רצף השימוש?',a:1,o:[['״באיזה קידוד נפתח הדף?״ כדי לברר מדוע הכניסה פגה.','קידוד קשור לפירוש תווים. לא תואר כאן שיבוש תווים.'],['״אחרי כמה זמן ללא שימוש זה קרה, והאם כניסה מחדש מאפשרת להמשיך?״ כדי לברר את תנאי ההפסקה והחידוש.','התשובה מוסיפה מידע על רצף השימוש. ייתכן שמדובר במדיניות תקינה, ואין כאן הוכחה לתקלה בשכבה 5.'],['״אפשר לאשר ששכבה 5 התקלקלה?״ כדי לסיים את האבחון.','אין עדיין בסיס לאבחנה. עדיף לבקש עובדות על השימוש.']]},
+{n:5,s:'אני שולח קובץ גדול. כשהפעולה נפסקת ואני מתחיל מחדש, לא ברור לי אם היא ממשיכה או מתחילה מההתחלה.',q:'איזה צמד מתאים לבירור הראשוני?',a:2,o:[['״האם שם הקובץ בעברית?״ כי כל פעולה שנקטעת היא בעיית קידוד.','שם בעברית אינו מסביר הפסקה וחידוש. קידוד נוגע לייצוג תווים.'],['״האם כפתור השליחה מוצג?״ כי הכפתורים הם שכבה 7.','הופעת כפתור שייכת לממשק. חסר מידע על מה שקרה אחרי החידוש.'],['״אחרי החידוש, הפעולה ממשיכה מהשלב שבו נעצרה או מתחילה מחדש?״ כדי לברר את רצף הפעולה.','זה מתקשר לתיאום ולסנכרון. לא כל מערכת תומכת בחידוש, והשאלה אינה מוכיחה תקלה בשכבה 5.']]},
+{n:6,s:'קיבלתי דוח מספק. הקובץ נפתח, אבל שמות הלקוחות מופיעים כסימנים לא קריאים.',q:'איזה צמד מתאים לבירור?',a:0,o:[['״באיזה קידוד נוצר הקובץ, ובאיזה קידוד הוא נפתח?״ כדי לבדוק התאמה בייצוג התווים.','קידוד היצירה וקידוד הקריאה רלוונטיים לשיבוש. זה כיוון בדיקה, ולא הוכחה לסיבה.'],['״אחרי כמה זמן הכניסה פגה?״ כדי לבדוק ייצוג תווים בשכבה 5.','תוקף הכניסה אינו ייצוג תווים. כאן הקובץ נפתח והתוכן אינו נקרא כראוי.'],['״תיבת הדואר נפתחת?״ כי כל קובץ בדואר הוא תקלה בשכבה 7.','אופן קבלת הקובץ אינו קובע את מקור התקלה, ואינו מסביר איך התווים פורשו.']]},
+{n:7,s:'תוכנת הדואר שולחת באמצעות SMTP. מאז הבוקר אני מקבל שגיאה בכל שליחה.',q:'איזה צמד מתאים לבירור שירות התקשורת?',a:1,o:[['״העברית בקובץ המצורף תקינה?״ כי שכבה 6 קובעת אם השרת מקבל הודעה.','לא תואר שיבוש תווים. כדאי להתחיל באיסוף פרטי השגיאה.'],['״מה נוסח השגיאה, ובאיזה שלב של השליחה היא מופיעה?״ כדי לאסוף מידע על שירות הדואר.','נוסח השגיאה והשלב יעזרו להבין את תוצאת הפעולה. אין בכך עדיין הוכחה שהסיבה בשכבה 7.'],['״תוכנת הדואר פתוחה?״ אם כן, שכבה 7 בהכרח תקינה.','תוכנה פתוחה אינה מוכיחה ששירות התקשורת פועל.']]}];
+/* ---------- screenshot payload ---------- */
+const shot=document.createElement('canvas');shot.width=480;shot.height=320;
+(function(){const c=shot.getContext('2d');let g=c.createLinearGradient(0,0,480,320);g.addColorStop(0,'#27308c');g.addColorStop(.55,'#7a48c9');g.addColorStop(1,'#ff9d42');c.fillStyle=g;c.fillRect(0,0,480,320);
+c.fillStyle='#f4f5ff';c.fillRect(30,28,420,264);c.fillStyle='#dfe3ff';c.fillRect(30,28,420,34);['#ff6f61','#ffc24b','#4fd6a5'].forEach((k,i)=>{c.fillStyle=k;c.beginPath();c.arc(52+i*22,45,7,0,7);c.fill()});
+c.fillStyle='#5b8cff';c.fillRect(350,62,100,230);c.fillStyle='#b9c4ff';for(let i=0;i<5;i++)c.fillRect(52,84+i*40,270,16);c.fillStyle='#9fb8ff';for(let i=0;i<4;i++)c.fillRect(366,84+i*34,68,12);
+c.fillStyle='#fff';c.fillRect(100,110,230,122);c.strokeStyle='#e0452f';c.lineWidth=5;c.strokeRect(100,110,230,122);c.fillStyle='#e0452f';c.beginPath();c.arc(215,150,24,0,7);c.fill();c.fillStyle='#fff';c.fillRect(211,135,8,18);c.fillRect(211,157,8,8);
+c.fillStyle='#2b2f5c';c.fillRect(150,188,130,9);c.fillRect(170,206,90,9)})();
+const GW=48,GH=32,cells=(()=>{const d=shot.getContext('2d').getImageData(0,0,480,320).data,o=[];for(let y=0;y<GH;y++)for(let x=0;x<GW;x++){let i=((y*10+5)*480+x*10+5)*4;o.push({x,y,c:`rgb(${d[i]},${d[i+1]},${d[i+2]})`,a:Math.random()*6.28,r:.4+Math.random(),b:Math.random()<.5?'0':'1'})}return o})();
+/* ---------- sound: everything is synthesized; put file paths here to replace ---------- */
+const AUDIO={background:'',finish:''};
+const Snd=(()=>{let ac,master,bg,noise,on=true,timer,el,ride;try{on=localStorage.getItem('bts-snd')!=='0'}catch(e){}
+ const now=()=>ac.currentTime;
+ function tone(f,t,d,v,type='sine',out=master,f2){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+Math.min(.03,d*.2));g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(out);o.start(t);o.stop(t+d+.05)}
+ function pad(f,t,d,v){const o=ac.createOscillator(),o2=ac.createOscillator(),lp=ac.createBiquadFilter(),g=ac.createGain();o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*1.004;lp.type='lowpass';lp.frequency.value=700;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+d*.4);g.gain.linearRampToValueAtTime(0,t+d);o.connect(lp);o2.connect(lp);lp.connect(g).connect(bg);o.start(t);o2.start(t);o.stop(t+d);o2.stop(t+d)}
+ function whoosh(t,d,v,hi,out){const b=ac.createBufferSource(),f=ac.createBiquadFilter(),g=ac.createGain();b.buffer=noise;b.loop=true;f.type='bandpass';f.Q.value=.8;f.frequency.setValueAtTime(180,t);f.frequency.exponentialRampToValueAtTime(hi,t+d*.7);f.frequency.exponentialRampToValueAtTime(220,t+d);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+d*.65);g.gain.exponentialRampToValueAtTime(.0001,t+d);b.connect(f).connect(g).connect(out);b.start(t);b.stop(t+d)}
+ const CH=[[110,164.8,220],[87.3,130.8,220],[98,146.8,196],[82.4,123.5,196]],PL=[440,523.3,587.3,659.3,784,880];let step=0;
+ function bar(){if(!on||document.hidden)return;const t=now()+.05;CH[step++%4].forEach(f=>pad(f,t,11,.09));for(let i=0;i<3;i++)if(Math.random()<.6)tone(pick(PL),t+1+Math.random()*6,1.8,.018,'sine',bg)}
+ function start(){if(AUDIO.background){if(!el){el=new Audio(AUDIO.background);el.loop=true;el.volume=.25}el.play().catch(()=>{})}else if(!timer){bar();timer=setInterval(bar,7500)}}
+ function unlock(){if(!on)return;if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(!A)return;ac=new A();master=ac.createGain();master.gain.value=.8;master.connect(ac.destination);bg=ac.createGain();bg.gain.value=.55;bg.connect(master);noise=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  ac.resume();start()}
+ let lastNo=-9;
+ const FX={tap:t=>tone(320,t,.09,.06),
+  ok:t=>{tone(659.3,t,.35,.12);tone(987.8,t+.13,.5,.12)},
+  no:t=>{if(t-lastNo<.2)return;lastNo=t;tone(233,t,.4,.1,'sine',master,196)},
+  unlock:t=>[523.3,659.3,784,1046.5].forEach((f,i)=>tone(f,t+i*.11,.5,.09)),
+  scene:t=>tone(784,t,.5,.04),
+  split:t=>tone([392,523.3,659.3][arg],t,1.3,.1),
+  finish:t=>{if(AUDIO.finish){const a=new Audio(AUDIO.finish);a.volume=.5;a.play().catch(()=>{});return}[261.6,329.6,392,523.3].forEach((f,i)=>tone(f,t+i*.28,4.5-i*.3,.1,'triangle'));[784,1046.5,1318.5].forEach((f,i)=>tone(f,t+1.4+i*.22,2.6,.06))}};
+ let arg=0;
+ function play(k,a){if(!on||!ac)return;arg=a||0;FX[k](now()+.01)}
+ function portal(n){if(!on||!ac)return;stopRide();ride=ac.createGain();ride.gain.value=1;ride.connect(master);const t=now(),d=n?4.6:2;whoosh(t,d,.3,n===6?3200:n===5?1600:2300,ride);tone(55,t,d,.16,'sine',ride,110);
+  if(n===7){tone(880,t+3.1,.25,.1,'triangle',ride);tone(1318.5,t+3.22,.5,.09,'sine',ride)}
+  if(n===6){for(let i=0;i<34;i++)tone(1400+Math.random()*2600,t+1+Math.random()*1.9,.12,.025,'sine',ride);for(let i=0;i<10;i++)tone(900+i*130,t+3.1+i*.07,.2,.04,'sine',ride)}
+  if(n===5){tone(329.6,t+1,2.4,.08,'sine',ride);tone(493.9,t+2.1,2.2,.08,'sine',ride)}
+  bg.gain.setTargetAtTime(.2,t,.2);bg.gain.setTargetAtTime(.55,t+d,.6)}
+ function stopRide(){if(ride){const x=ride;ride=null;x.gain.setTargetAtTime(0,now(),.12);setTimeout(()=>x.disconnect(),900)}}
+ function paint(){const b=$('#snd-toggle');b.setAttribute('aria-pressed',on);b.textContent=on?'צליל פועל':'צליל כבוי'}
+ function toggle(){on=!on;try{localStorage.setItem('bts-snd',on?'1':'0')}catch(e){}paint();if(on){unlock();if(ac){bg.gain.cancelScheduledValues(0);bg.gain.value=.55}}else{if(ac)ac.suspend();clearInterval(timer);timer=0;if(el)el.pause()}}
+ document.addEventListener('visibilitychange',()=>{if(!ac||!on)return;if(document.hidden){ac.suspend();if(el)el.pause()}else{ac.resume();if(el)el.play().catch(()=>{})}});
+ $('#snd-toggle').onclick=e=>{e.stopPropagation();toggle()};paint();
+ document.addEventListener('click',e=>{if(e.target.closest('#snd-toggle'))return;unlock();if(e.target.closest('button'))play('tap')},true);
+ function duck(x){if(ac&&bg)bg.gain.setTargetAtTime(x?.12:.55,now(),.3);if(el)el.volume=x?.06:.25}
+ return{play,portal,stopRide,duck,state:()=>({on,ctx:ac&&ac.state,timer:!!timer})}})();
+/* ---------- canvas helpers ---------- */
+function fit(cv){const d=Math.min(2,devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==Math.round(w*d)||cv.height!==Math.round(h*d)){cv.width=Math.round(w*d);cv.height=Math.round(h*d)}const c=cv.getContext('2d');c.setTransform(d,0,0,d,0,0);return[c,w,h]}
+function txt(c,s,x,y,z,col='#f1f2ff',w=700,ltr){c.font=`${w} ${z}px Rubik,Arial`;c.fillStyle=col;c.textAlign='center';c.textBaseline='middle';c.direction=ltr?'ltr':'rtl';c.fillText(s,x,y)}
+function rr(c,x,y,w,h,r){c.beginPath();c.roundRect?c.roundRect(x,y,w,h,r):c.rect(x,y,w,h)}
+function glow(c,col,n){c.shadowColor=col;c.shadowBlur=n}
+/* ---------- background field: lines only near the pointer ---------- */
+const sp=$('#space');let pts=[],mx=-999,my=-999;
+addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY});document.addEventListener('pointerleave',()=>{mx=my=-999});
+function seed(){const n=Math.min(130,Math.round(innerWidth*innerHeight/11000));pts=Array.from({length:n},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,vx:(Math.random()-.5)*.22,vy:(Math.random()-.5)*.22,r:.7+Math.random()*1.5,k:[COL[7],COL[6],COL[5]][Math.random()*3|0]}))}
+seed();addEventListener('resize',seed);
+function field(){const[c,w,h]=fit(sp);c.clearRect(0,0,w,h);let g=c.createRadialGradient(w*.7,h*.1,0,w*.7,h*.1,w*.7);g.addColorStop(0,'rgba(44,40,130,.32)');g.addColorStop(1,'rgba(4,5,26,0)');c.fillStyle=g;c.fillRect(0,0,w,h);
+const near=[];for(const p of pts){if(!calm){p.x=(p.x+p.vx+w)%w;p.y=(p.y+p.vy+h)%h}c.globalAlpha=.75;c.fillStyle=p.k;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();const d=Math.hypot(p.x-mx,p.y-my);if(d<150)near.push([p,d])}
+for(const[p,d]of near){c.globalAlpha=(1-d/150)*.55;c.strokeStyle=p.k;c.lineWidth=1;c.beginPath();c.moveTo(p.x,p.y);c.lineTo(mx,my);c.stroke()}c.globalAlpha=1;requestAnimationFrame(field)}
+field();
+/* ---------- portal: a fast ride through network space ---------- */
+const P=$('#portal'),pc=$('canvas',P);let pstop=null;
+function drawPayload(c,n,p,s){const w=s,h=s*2/3;
+ if(n===7||n===0){c.save();glow(c,COL[n],30);c.drawImage(shot,-w/2,-h/2,w,h);c.restore();
+  if(n===7){const e=ease(seg(p,.35,.75)),pad=18*e;c.strokeStyle=COL[7];c.lineWidth=5;c.setLineDash([2*(w+h)*2*e,9999]);rr(c,-w/2-pad,-h/2-pad,w+2*pad,h+2*pad,14);c.stroke();c.setLineDash([]);c.globalAlpha=e;c.fillStyle=COL[7];rr(c,-w/2-pad,-h/2-pad-46,w+2*pad,38,10);c.fill();txt(c,'POST /tickets',0,-h/2-pad-27,Math.min(20,w/14),'#03041a',700,true);c.globalAlpha=1}}
+ else if(n===6){const ex=ease(seg(p,.2,.55)),bi=seg(p,.5,.65),co=ease(seg(p,.66,.95)),cw=w/GW;
+  if(ex===0){c.drawImage(shot,-w/2,-h/2,w,h);return}
+  for(const q of cells){const bx=(q.x+.5)*cw-w/2,by=(q.y+.5)*cw-h/2,f=ex*(1-co),sc=1-.62*co;const x=bx*sc*(1+f*1.1)+Math.cos(q.a)*q.r*w*.22*f,y=by*sc*(1+f*1.1)+Math.sin(q.a)*q.r*w*.22*f,z=cw*sc*(1-.25*f);
+   if(bi<q.r/1.5){c.fillStyle=q.c;c.fillRect(x-z/2,y-z/2,z+.5,z+.5)}else{c.fillStyle=co>.5?COL[6]:q.c;c.font=`700 ${Math.max(5,z*1.1)}px monospace`;c.textAlign='center';c.textBaseline='middle';c.fillText(q.b,x,y)}}
+  if(co>.6){c.globalAlpha=(co-.6)/.4;c.strokeStyle=COL[6];c.lineWidth=4;glow(c,COL[6],24);rr(c,-w*.24,-h*.26,w*.48,h*.52,14);c.stroke();c.shadowBlur=0;c.globalAlpha=1}}
+ else{const b=ease(seg(p,.15,.45)),sx=w*.72;c.strokeStyle=COL[5];c.lineWidth=5;glow(c,COL[5],22);c.beginPath();c.moveTo(-sx,0);c.lineTo(lerp(-sx,sx,b),0);c.stroke();for(const s2 of[-1,1]){c.beginPath();c.arc(s2*sx,0,w*.09,0,7);c.fillStyle='#03041a';c.fill();c.stroke()}c.shadowBlur=0;
+  for(let i=0;i<8;i++){const u=ease(seg(p,.35+i*.04,.65+i*.04)),x=lerp(-sx,sx,u),z=w*.12;if(u>0&&u<1){c.save();c.translate(x,Math.sin(u*3.14)*-h*.22);c.drawImage(shot,(i%4)*120,(i/4|0)*160,120,160,-z/2,-z*.66,z,z*1.33);c.strokeStyle=COL[5];c.lineWidth=2;c.strokeRect(-z/2,-z*.66,z,z*1.33);c.restore()}}}}
+function portal(n,cap,mid){if(calm){mid();return}
+ if(pstop)pstop();Snd.portal(n);const col=COL[n];P.style.setProperty('--c',col);$('.cap',P).textContent=cap;P.classList.add('on');
+ const mix=n===0?[COL[7],COL[6],COL[5],COL[0]]:[col,col,col,'#eef0ff'];const ST=Array.from({length:230},()=>({a:Math.random()*6.283,r:.12+Math.random()*1.4,z:Math.random(),k:mix[Math.random()*4|0],g:Math.random()<.2?'01{}/<>#'[Math.random()*8|0]:0}));
+ const FR=Array.from({length:13},(_,i)=>i/13);const dur=n===0?2000:4600;let t0=performance.now(),last=t0,dead=false,done=false;
+ const end=()=>{if(done)return;done=true;mid();P.classList.remove('on');setTimeout(()=>{dead=true},500)};
+ pstop=()=>{end();dead=true};
+ (function fr(now){if(dead)return;now=now||performance.now();const p=clamp((now-t0)/dur),dt=Math.min(.05,(now-last)/1000);last=now;const[c,w,h]=fit(pc);
+  c.fillStyle='rgba(2,3,15,.42)';c.fillRect(0,0,w,h);const v=.18+1.15*Math.sin(Math.PI*clamp(p*.92+.06)),m=Math.max(w,h)*.5;c.save();c.translate(w/2,h/2);
+  let g=c.createRadialGradient(0,0,0,0,0,m);g.addColorStop(0,col+'40');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(-w/2,-h/2,w,h);
+  for(let i=0;i<FR.length;i++){FR[i]-=dt*v*.8;if(FR[i]<.03)FR[i]+=1;const s=.16/FR[i];c.globalAlpha=clamp((1-FR[i])*.42);c.strokeStyle=mix[i%4];c.lineWidth=1.5+s*.6;rr(c,-w*.42*s,-h*.42*s,w*.84*s,h*.84*s,18*s);c.stroke()}
+  for(const q of ST){q.z-=dt*v;if(q.z<.03){q.z=1;q.a=Math.random()*6.283}const s=.3/q.z,s2=.3/(q.z+.03+v*.09),x=Math.cos(q.a)*q.r*m*s,y=Math.sin(q.a)*q.r*m*s,x2=Math.cos(q.a)*q.r*m*s2,y2=Math.sin(q.a)*q.r*m*s2;c.globalAlpha=clamp(1.1-q.z);c.strokeStyle=c.fillStyle=q.k;
+   if(q.g){c.font=`700 ${Math.min(40,9*s+6)}px monospace`;c.fillText(q.g,x,y)}else{c.lineWidth=Math.min(4,s*1.1);c.beginPath();c.moveTo(x2,y2);c.lineTo(x,y);c.stroke()}}
+  c.globalAlpha=1;if(n!==0){const s=Math.min(w*.5,h*.62)*lerp(.35,1,ease(seg(p,0,.3)))*(1+2.6*Math.pow(seg(p,.93,1),2));c.globalAlpha=1-seg(p,.95,1);drawPayload(c,n,p,s);c.globalAlpha=1}
+  const fl=seg(p,.86,1);if(fl>0){let k=c.createRadialGradient(0,0,0,0,0,m*1.5*fl+1);k.addColorStop(0,'rgba(255,255,255,'+fl+')');k.addColorStop(.35,col);k.addColorStop(1,col+'00');c.globalAlpha=fl;c.fillStyle=k;c.fillRect(-w/2,-h/2,w,h);c.globalAlpha=1}
+  c.restore();if(p>=1)end();requestAnimationFrame(fr)})()}
+$('#skip').onclick=()=>{Snd.stopRide();pstop&&pstop()};
+/* ---------- short films ---------- */
+function node(c,x,y,s,col,label){c.strokeStyle=col;c.lineWidth=3;glow(c,col,14);c.fillStyle='#0b0d2b';rr(c,x-s*.6,y-s*.42,s*1.2,s*.84,10);c.fill();c.stroke();c.shadowBlur=0;c.beginPath();c.moveTo(x-s*.3,y+s*.6);c.lineTo(x+s*.3,y+s*.6);c.stroke();txt(c,label,x,y+s*.82,Math.max(13,s*.17))}
+function img(c,x,y,w){c.drawImage(shot,x-w/2,y-w/3,w,w*2/3)}
+const FILM={
+7(c,w,h,i,p){const k=COL[7],L=w*.82,R=w*.18,y=h*.45,s=Math.min(w*.17,h*.34);node(c,L,y,s,k,'המחשב');node(c,R,y,s,k,'שרת הפניות');const e=ease(seg(p,.15,.8));
+ if(i===0){img(c,L,y,s*.95*ease(seg(p,0,.4)));const b=ease(seg(p,.35,.6));c.globalAlpha=b;c.fillStyle=COL[0];rr(c,w/2-70,y-26,140,52,16);c.fill();txt(c,'שליחה',w/2,y,20,'#231000');c.globalAlpha=1}
+ if(i===1){img(c,L,y,s*.95);node(c,w/2,h*.22,s*.7,k,'');txt(c,'DNS',w/2,h*.22,s*.2,k,800,true);const u=p<.5?ease(p*2):1-ease((p-.5)*2);c.fillStyle='#fff';c.beginPath();c.arc(lerp(L,w/2,u),lerp(y-s*.5,h*.3,u),7,0,7);c.fill();txt(c,p<.5?'tickets.example':'203.0.113.8',w/2,h*.48,18,'#fff',500,true)}
+ if(i===2){c.strokeStyle=k;c.setLineDash([6,8]);c.beginPath();c.moveTo(L-s*.7,y);c.lineTo(R+s*.7,y);c.stroke();c.setLineDash([]);const x=lerp(L,R,e);c.fillStyle=k;rr(c,x-64,y-58,128,30,8);c.fill();txt(c,'HTTP POST',x,y-42,15,'#03041a',700,true);img(c,x,y+16,110)}
+ if(i===3){img(c,R,y,s*.95);const x=lerp(R,L,e),bad=p>.5;c.fillStyle=bad?'#ffb3a1':COL[5];rr(c,x-60,y-24,120,48,12);c.fill();txt(c,bad?'404':'200 OK',x,y,20,'#03041a',800,true)}},
+6(c,w,h,i,p){const k=COL[6],s=Math.min(w*.5,h*.8);c.save();c.translate(w/2,h/2);const cw=s/GW;
+ if(i===0){const e=ease(seg(p,.2,.8));for(const q of cells){const g=1+e*.35;c.fillStyle=q.c;c.fillRect(((q.x+.5)*cw-s/2)*g-cw*.46,((q.y+.5)*cw-s/3)*g-cw*.46,cw*.92,cw*.92)}if(p>.65)txt(c,'255 · 157 · 66',0,s*.55>h*.45?h*.43:s*.55,18,'#fff',700,true)}
+ if(i===1){const e=ease(seg(p,.15,.75)),z=lerp(1,.5,e);c.save();c.scale(z,z);c.drawImage(shot,-s/2,-s/3,s,s*2/3);c.restore();txt(c,e<.5?'2.4 MB':'0.6 MB',0,h*.43,24,k,800,true);c.strokeStyle=k;c.lineWidth=4;for(const d of[-1,1]){const x=d*(s*.5*z+26);c.beginPath();c.moveTo(x,-s*.3*z);c.lineTo(x,s*.3*z);c.stroke()}}
+ if(i===2){const e=seg(p,.15,.7);for(const q of cells){const x=((q.x+.5)*cw-s/2)*.6,y=((q.y+.5)*cw-s/3)*.6;if(e*1.5>q.r){c.fillStyle=k;c.font=`700 ${cw*.75}px monospace`;c.textAlign='center';c.textBaseline='middle';c.fillText(q.b,x,y)}else{c.fillStyle=q.c;c.fillRect(x-cw*.3,y-cw*.3,cw*.6,cw*.6)}}if(p>.6){glow(c,k,24);c.strokeStyle='#fff';c.lineWidth=6;c.beginPath();c.arc(0,-18,18,Math.PI,0);c.stroke();c.shadowBlur=0;c.fillStyle='#fff';rr(c,-28,-18,56,44,8);c.fill()}}
+ if(i===3){const e=ease(seg(p,.15,.8)),z=lerp(.5,1,e);for(const q of cells){const x=((q.x+.5)*cw-s/2)*z,y=((q.y+.5)*cw-s/3)*z;if(e<q.r/1.45){c.fillStyle=k;c.font=`700 ${cw*z}px monospace`;c.textAlign='center';c.textBaseline='middle';c.fillText(q.b,x,y)}else{c.fillStyle=q.c;c.fillRect(x-cw*z/2,y-cw*z/2,cw*z+.5,cw*z+.5)}}}c.restore()},
+5(c,w,h,i,p){const k=COL[5],L=w*.82,R=w*.18,y=h*.45,s=Math.min(w*.17,h*.34),a=L-s*.7,b=R+s*.7;node(c,L,y,s,k,'יישום א');node(c,R,y,s,k,'יישום ב');const line=(f,dash)=>{c.strokeStyle=k;c.lineWidth=4;if(dash)c.setLineDash([8,8]);glow(c,k,12);c.beginPath();c.moveTo(a,y);c.lineTo(lerp(a,b,f),y);c.stroke();c.setLineDash([]);c.shadowBlur=0};
+ const chunk=(u,n)=>{const z=34;c.drawImage(shot,(n%4)*120,(n/4|0)*160,120,160,lerp(a,b,u)-z/2,y-z*.66,z,z*1.33)};
+ if(i===0){line(ease(seg(p,.1,.7)));if(p>.65)txt(c,'השיחה נפתחה',w/2,y-46,22,k)}
+ if(i===1){line(1);for(let n=0;n<8;n++){const u=(p*1.6-n*.12);if(u>0&&u<1)chunk(u,n)}}
+ if(i===2){const cut=p>.28&&p<.55;line(1,cut);const sx=lerp(a,b,.55);c.fillStyle=COL[0];c.beginPath();c.arc(sx,y,10,0,7);c.fill();txt(c,'נקודת סנכרון',sx,y+38,16,COL[0]);const u=p<.28?p/.28*.7:p<.55?.7:lerp(.55,1,seg(p,.55,.95));if(!cut)chunk(u,2);else txt(c,'הפרעה',w/2,y-50,22,'#ffb3a1')}
+ if(i===3){line(1-ease(seg(p,.25,.8)));if(p>.75)txt(c,'השיחה הסתיימה',w/2,y-46,22,k)}}};
+/* narrated films: the voice is the clock; add an entry per layer once its recording exists */
+const VOICE={6:{src:'audio/layer6.mp4',total:25.96,starts:[0,7,13.2,18.75],cues:[[0,'התמונה בנויה מפיקסלים.'],[2.2,'אלה נקודות צבע קטנות.'],[4.1,'המחשב שומר כל נקודה כמספרים.'],[7,'עכשיו מגיעה הדחיסה.'],[8.9,'היא מקטינה את נפח הנתונים. כך יש פחות מידע להעביר.'],[13.2,'הצפנה עושה משהו אחר.'],[14.9,'היא מגינה על התוכן.'],[16.5,'בלי מפתח, אי אפשר לקרוא אותו.'],[18.75,'ובצד השני?'],[19.85,'הכול קורה בסדר הפוך: פענוח, פריסה ופירוש.'],[24.1,'והתמונה מוצגת.']]}};
+function film(n){const el=$('#film'),cv=$('canvas',el),cp=$('.capt',el),bar=$('.bar span',el),bt=$('#play'),V=VOICE[n],ST=V?V.starts:[0,7,14,21],TOT=V?V.total:28,CU=V?V.cues:ST.map((x,i)=>[x,L[n].film[i]]);let t=0,run=false,last=0,live=true,scene=-1,au=null,useAu=false;
+ if(V){au=new Audio(V.src);au.preload='auto';au.onended=()=>{if(useAu)end()};au.onerror=()=>{useAu=false}}
+ const end=()=>{if(!run)return;run=false;t=TOT;bt.textContent='צפייה חוזרת';Snd.duck(false);finish('film-'+n)};
+ const stop=()=>{run=false;if(au)au.pause();Snd.duck(false);bt.textContent='המשך צפייה'};
+ const draw=()=>{const[c,w,h]=fit(cv);c.clearRect(0,0,w,h);let i=0;while(i<3&&t>=ST[i+1])i++;const e=i<3?ST[i+1]:TOT;FILM[n](c,w,h,i,clamp((t-ST[i])/(e-ST[i])));bar.style.width=t/TOT*100+'%';let k=0;while(k<CU.length-1&&t>=CU[k+1][0])k++;if(cp.dataset.i!=k){cp.dataset.i=k;cp.textContent=CU[k][1]}if(i!==scene){scene=i;if(run&&!V)Snd.play('scene')}};
+ const tick=now=>{if(!live)return;if(run){if(useAu&&au){t=Math.min(TOT,au.currentTime);au.muted=!Snd.state().on}else{t=Math.min(TOT,t+Math.min(1,(now-last)/1000));if(t>=TOT)end()}}last=now;draw();requestAnimationFrame(tick)};
+ bt.onclick=()=>{if(run){stop();return}if(t>=TOT){t=0;scene=-1}run=true;last=performance.now();bt.textContent='השהיה';if(au){useAu=true;au.muted=!Snd.state().on;Snd.duck(true);au.play().catch(()=>{useAu=false;last=performance.now()})}};
+ const hid=()=>{if(document.hidden&&run)stop()};document.addEventListener('visibilitychange',hid);
+ loops.push(()=>{live=false;run=false;if(au)au.pause();Snd.duck(false);document.removeEventListener('visibilitychange',hid)});requestAnimationFrame(tick)}
+/* ---------- practice components ---------- */
+const PRAISE=['מדויק.','בדיוק כך.','הבחנה יפה.','נכון מאוד.'],NUDGE=['עוד לא, אבל הכיוון נבנה.','כמעט. כדאי להסתכל שוב.','טעות שימושית. הנה רמז.'];
+
+const fb=(ok,x)=>{if(!ok)Snd.play('no');return `<div class="fb ${ok?'ok':'no'}"><strong>${ok?'✓ '+pick(PRAISE):'↻ '+pick(NUDGE)}</strong>${x}</div>`};
+function quizHTML(id,q){return`<section class="panel" data-quiz="${id}" ${q.n?`style="--c:${COL[q.n]}"`:''}>${q.s?`<blockquote>״${q.s}״</blockquote>`:`<h2>שאלה קצרה</h2><p class="mut">${q.c}</p>`}<h3 id="${id}-h">${q.q}</h3><div class="opts" role="radiogroup" aria-labelledby="${id}-h">${q.o.map((o,i)=>`<button class="opt" role="radio" aria-checked="false" data-i="${i}">${o[0]}</button>`).join('')}</div><div class="row"><button class="btn soft" data-check disabled>בדיקת תשובה</button><button class="btn soft" data-show hidden>הצגת תשובה והסבר</button></div><div role="status" class="out"></div></section>`}
+function quiz(id,q){const r=$(`[data-quiz="${id}"]`),O=$$('.opt',r),ck=$('[data-check]',r),sh=$('[data-show]',r),out=$('.out',r);let s=-1;
+ const win=i=>{out.innerHTML=fb(true,q.o[i][1]);O.forEach((o,j)=>{o.disabled=true;o.setAttribute('aria-checked',j===i)});ck.hidden=sh.hidden=true;finish(id)};
+ O.forEach((o,i)=>o.onclick=()=>{s=i;O.forEach((x,j)=>x.setAttribute('aria-checked',j===i));ck.disabled=false;out.innerHTML=''});
+ ck.onclick=()=>{if(s===q.a)win(s);else{out.innerHTML=fb(false,q.o[s][1]);sh.hidden=false}};sh.onclick=()=>{win(q.a);out.innerHTML=`<div class="fb ok"><strong>התשובה המתאימה</strong>${q.o[q.a][1]}</div>`};if(S.done[id])win(q.a)}
+function matchHTML(id){const m=M[id];return`<div class="opts" data-match="${id}">${m.rows.map((r,i)=>`<div class="mrow"><label for="${id}${i}">${r[0]}</label><select id="${id}${i}"><option value="">בחירה</option>${m.opts.map((o,j)=>`<option value="${j}">${o}</option>`).join('')}</select><div class="slot" role="status" style="grid-column:1/-1"></div></div>`).join('')}<div class="row"><button class="btn soft" data-check disabled>בדיקת התאמות</button><button class="btn soft" data-show hidden>הצגת ההתאמה הנכונה</button></div><div class="out" role="status"></div></div>`}
+function match(id){const m=M[id],r=$(`[data-match="${id}"]`),E=$$('select',r),SL=$$('.slot',r),ck=$('[data-check]',r),sh=$('[data-show]',r);
+ const go=()=>{let all=true;E.forEach((e,i)=>{const ok=+e.value===m.rows[i][1];if(ok)e.disabled=true;else all=false;SL[i].innerHTML=fb(ok,ok?m.rows[i][2]:m.hint[m.rows[i][1]])});if(all){$('.out',r).innerHTML=`<div class="fb ok"><strong>${m.win}</strong></div>`;ck.hidden=sh.hidden=true;finish(id)}else sh.hidden=false};
+ E.forEach((e,i)=>e.onchange=()=>{SL[i].innerHTML='';ck.disabled=E.some(x=>x.value==='')});ck.onclick=go;sh.onclick=()=>{E.forEach((e,i)=>e.value=m.rows[i][1]);go()};if(S.done[id])sh.onclick()}
+const NAMES='נועה לוי · 1042 · עידו כהן · 2210',BYTES=new TextEncoder().encode(NAMES),ENC=[['windows-1252','Windows-1252'],['windows-1255','Windows-1255'],['utf-8','UTF-8']];
+const g6HTML=`<p class="mut">הקובץ נוצר ב־UTF-8 ונפתח בקידוד אחר. יש למצוא את קידוד הקריאה שמחזיר את השמות.</p><div class="sample" id="smp" dir="auto"></div><div class="row">${ENC.map((e,i)=>`<button class="opt" data-enc="${i}" aria-pressed="${i===0}" dir="ltr">${e[1]}</button>`).join('')}</div><div class="out" id="g6o" role="status"></div>`;
+function g6(){const B=$$('[data-enc]');const set=i=>{B.forEach((b,j)=>b.setAttribute('aria-pressed',j===i));$('#smp').textContent=new TextDecoder(ENC[i][0]).decode(BYTES)};set(S.done.g6?2:0);if(S.done.g6)$('#g6o').innerHTML=fb(true,'קידוד הקריאה תואם לקידוד היצירה.');
+ B.forEach((b,i)=>b.onclick=()=>{set(i);if(i===2){$('#g6o').innerHTML=fb(true,'קידוד הקריאה תואם לקידוד היצירה, והשמות חזרו. הנתונים לא השתנו, רק הפירוש שלהם.');finish('g6')}else $('#g6o').innerHTML=fb(false,'אותם נתונים, פירוש אחר. המספרים נשארו תקינים והאותיות לא. כדאי להתאים לקידוד שבו הקובץ נוצר.')})}
+const STEPS=['שני היישומים פותחים שיחה','חלקי צילום המסך עוברים בתיאום','החיבור נקטע וחוזר, והמערכת ממשיכה מנקודת סנכרון','השיחה נסגרת בצורה מסודרת'],MIX=[2,0,3,1];
+const g5HTML=`<p class="mut">המערכת בדוגמה תומכת בנקודות סנכרון. יש ללחוץ על השלבים לפי הסדר, מהראשון לאחרון.</p><div class="opts">${MIX.map(i=>`<button class="opt" data-st="${i}" aria-pressed="false">${STEPS[i]}</button>`).join('')}</div><div class="out" id="g5o" role="status"></div>`;
+function g5(){let k=0;const B=$$('[data-st]'),HT=['לפני שמחליפים מידע צריך לפתוח שיחה.','השיחה פתוחה. עכשיו המידע מתחיל לעבור.','באמצע ההעברה קרתה הפרעה.','נשאר רק לסגור.'];const on=b=>{b.setAttribute('aria-pressed',true);b.disabled=true;b.textContent=(+b.dataset.st+1)+'. '+STEPS[b.dataset.st]};
+ const w=()=>{$('#g5o').innerHTML=fb(true,'הקמה, ניהול, חידוש וסיום. כך מתנהלת שיחה בין יישומים.');finish('g5')};
+ B.forEach(b=>b.onclick=()=>{if(+b.dataset.st===k){on(b);k++;$('#g5o').innerHTML='';if(k===4)w()}else $('#g5o').innerHTML=fb(false,HT[k])});if(S.done.g5){B.forEach(on);w()}}
+/* ---------- basics ---------- */
+const TOWER=[[7,'יישום','שירותי תקשורת ליישומים, למשל בקשת דף.'],[6,'ייצוג','צורת הנתונים: קידוד, דחיסה והצפנה.'],[5,'שיחה','הקמה, ניהול וסיום של שיחה בין יישומים.'],[4,'תעבורה','העברת נתונים בין התוכנות שבשני הקצוות.'],[3,'רשת','מציאת דרך בין רשתות שונות.'],[2,'קישור נתונים','העברה בין רכיבים סמוכים באותה רשת.'],[1,'פיזית','האותות עצמם: חשמל, אור או גלי רדיו.']];
+const QB={c:'אפשר להיעזר בהסברים שלמעלה.',q:'צילום מסך יוצא מהמחשב אל שרת הפניות. באיזה סדר עוברים על השכבות בצד השולח?',a:0,o:[['מלמעלה למטה: 7, 6, 5 והלאה עד 1.','בצד השולח יורדים מ־7 ל־1. בצד המקבל עולים מ־1 ל־7.'],['מלמטה למעלה: 1, 2, 3 והלאה עד 7.','זה הסדר בצד המקבל. השליחה מתחילה ביישום, ולכן בצד השולח מתחילים מ־7.'],['אין קשר בין השכבות, וכל אחת עובדת לבד.','כל שכבה מספקת שירות לשכבה שמעליה ונעזרת בזו שמתחתיה.']]};
+const BS=[
+['מי מדבר עם מי?','כשפותחים מערכת בדפדפן, שני מחשבים מתקשרים. <b>לקוח</b> הוא הצד שמבקש שירות. <b>שרת</b> הוא הצד שמספק אותו.',`<div class="duo"><div class="box" style="--c:${COL[7]}"><b>לקוח</b><span>הדפדפן במחשב</span></div><div class="duoa"><span>בקשה ←</span><span>→ תשובה</span></div><div class="box" style="--c:${COL[5]}"><b>שרת</b><span>מערכת הפניות</span></div></div>`],
+['איך הם מבינים זה את זה?','<b>פרוטוקול</b> הוא אוסף כללים מוסכמים: אילו הודעות שולחים, ומה המשמעות שלהן. כמו בבית קפה, שיש בו דרך מוכרת להזמין ולקבל תשובה.',`<div class="duo"><div class="box" style="--c:${COL[7]}"><b>״אפשר הפוך גדול?״</b><span>בקשה</span></div><div class="duoa"><span>כללים מוסכמים</span></div><div class="box" style="--c:${COL[5]}"><b>״בבקשה״ או ״נגמר״</b><span>תשובה</span></div></div>`],
+['מהו מודל OSI?','תקשורת כוללת הרבה תפקידים. <b>OSI</b> מסדר אותם בשבע <b>שכבות</b>. לחיצה על שכבה מציגה את תפקידה. אנחנו נתמקד ב־7, 6 ו־5.',`<div class="tower">${TOWER.map(t=>`<button class="opt" data-tw="${t[0]}" aria-pressed="false" style="--c:${COL[t[0]]||'#b3b8e2'}"><b class="tint">${t[0]}</b> ${t[1]}${t[0]<5?' <span class="mut">(להקשר)</span>':''}</button>`).join('')}</div><p class="lead" id="tw" role="status">המספור מתחיל מלמטה: 1 קרובה לכבל ולאות, ו־7 קרובה ליישום.</p>`],
+['למה מתחילים מ־7?','השכבות ממוספרות מלמטה למעלה, אבל שליחה מתחילה ביישום. לכן <b>בצד השולח יורדים מ־7 ל־1</b>, ו<b>בצד המקבל עולים מ־1 ל־7</b>.',`<canvas id="updown" role="img" aria-label="ההודעה יורדת מ־7 ל־1 בצד השולח ועולה מ־1 ל־7 בצד המקבל"></canvas>`],
+['שלוש השכבות שלנו','לכל שכבה שאלה משלה. השכבות הן <b>מפת תפקידים</b>: במערכת אמיתית תוכנה אחת יכולה למלא כמה מהם.',`<div class="three">${[[7,'איזה שירות מבקשים?'],[6,'באיזו צורה המידע מיוצג?'],[5,'איך השיחה מתנהלת?']].map(x=>`<div class="box" style="--c:${COL[x[0]]}">${ICON[x[0]].replace('<svg','<svg class="ic"')}<b>${x[0]} · ${NAME[x[0]]}</b><span>${x[1]}</span></div>`).join('')}</div>`]];
+const VIEWB=()=>({html:`<section style="display:grid;gap:18px"><h1 tabindex="-1">לפני שיוצאים <span class="tint">לדרך</span></h1><p class="lead">חמישה רעיונות קצרים שיעזרו להבין את כל המסע. אין צורך בידע קודם.</p></section><section class="panel"><p class="mut" id="bn"></p><div id="bx" class="bx" aria-live="polite"></div><div class="row"><button class="btn" id="bnext">הבא</button><button class="btn soft" id="bprev">הקודם</button></div></section>${quizHTML('qb',QB)}${gateHTML('basics',NEXT.basics)}`,init(){let k=0,live=true;loops.push(()=>live=false);
+ const draw=()=>{$('#bn').textContent=`${k+1} מתוך ${BS.length}`;$('#bx').innerHTML=`<h2>${BS[k][0]}</h2><p class="lead">${BS[k][1]}</p>${BS[k][2]}`;$('#bprev').disabled=k===0;$('#bnext').hidden=k===BS.length-1;if(k===BS.length-1)finish('bsteps');
+  $$('[data-tw]').forEach(b=>b.onclick=()=>{$$('[data-tw]').forEach(x=>x.setAttribute('aria-pressed',x===b));const t=TOWER.find(x=>x[0]==b.dataset.tw);$('#tw').textContent=`שכבה ${t[0]}, ${t[1]}: ${t[2]}`})};
+ $('#bnext').onclick=()=>{k++;draw()};$('#bprev').onclick=()=>{k--;draw()};draw();quiz('qb',QB);
+ (function f(now){if(!live)return;const cv=$('#updown');if(cv)towers(cv,calm?.35:((now||0)/9000)%1);requestAnimationFrame(f)})()}});
+function towers(cv,t){const[c,w,h]=fit(cv);c.clearRect(0,0,w,h);const R=w*.8,Lx=w*.2,bw=Math.min(190,w*.34),bh=(h-76)/7,top=40,Y=i=>top+i*bh+bh/2,u=t*14.4,v=Math.min(u,14),step=v<6.5?Math.round(v):v>7.5?Math.round(Math.max(0,Math.min(6,13.5-v))):-1;txt(c,'שולח: יורדים',R,18,17,COL[0]);txt(c,'מקבל: עולים',Lx,18,17,COL[0]);
+ for(let i=0;i<7;i++){const n=7-i,k=COL[n]||'#6b70a8';for(const[x,on]of[[R,v<6.5&&step===i],[Lx,v>7.5&&step===i]]){c.globalAlpha=n<5&&!on?.6:1;c.fillStyle=on?k:'#0b0d2b';c.strokeStyle=k;c.lineWidth=2;rr(c,x-bw/2,Y(i)-bh*.42,bw,bh*.84,9);c.fill();c.stroke();txt(c,n+' '+TOWER[i][1],x,Y(i),Math.min(16,bw*.1),on?'#03041a':'#f1f2ff',500);c.globalAlpha=1}}
+ c.strokeStyle='#6b70a8';c.lineWidth=3;c.beginPath();c.moveTo(R,Y(6)+bh*.42);c.lineTo(R,h-14);c.lineTo(Lx,h-14);c.lineTo(Lx,Y(6)+bh*.42);c.stroke();
+ const x=v<6.5?R-bw/2-22:v>7.5?Lx+bw/2+22:lerp(R-bw/2-22,Lx+bw/2+22,v-6.5),y=v<6.5?Y(v):v>7.5?Y(Math.max(0,Math.min(6,13.5-v))):h-14;c.drawImage(shot,x-18,y-12,36,24)}
+/* ---------- pages ---------- */
+function gateHTML(k,label){return`<section class="panel gate" id="gate"><ul class="checks">${NEED[k].map(x=>`<li data-k="${x}">${LBL[x]}</li>`).join('')}</ul><button class="btn" id="next">${label}</button><p class="mut" id="why"></p></section>`}
+function paintGate(){const k=PAGES[cur][0],n=NEED[k];if(!n||!$('#next'))return;let left=0;n.forEach(x=>{const d=!!S.done[x],li=$(`[data-k="${x}"]`);if(!d)left++;if(li){li.classList.toggle('y',d)}});$('#next').disabled=left>0;$('#why').textContent=left?(left===1?'נשאר עוד צעד אחד.':`נשארו עוד ${left} צעדים.`):'הכול הושלם. אפשר להתקדם.';if(!left&&S.max<cur+1){setTimeout(()=>Snd.play('unlock'),600);S.max=cur+1;save();nav()}}
+const NEXT={basics:'יוצאים לדרך עם צילום המסך',send:'כניסה לשכבת היישום',layer7:'המשך לשכבת הייצוג',layer6:'המשך לשכבת השיחה',layer5:'המשך להשוואה',compare:'המשך לפניות',tickets:'לסיום המסע'};
+function layerPage(n){const d=L[n],g={7:matchHTML('g7'),6:g6HTML,5:g5HTML}[n];return{html:`
+<section class="hero"><div><h1 tabindex="-1"><span class="tint">${d.t}</span></h1><p class="mut" dir="ltr" style="text-align:right;font-family:var(--disp);font-size:14px">${d.en} Layer ${n}</p><p class="lead">${d.lead}</p></div>${card(n)}</section>
+<section class="panel"><h2>איפה אנחנו במסע?</h2><p class="lead">${d.trail}</p><dl class="terms">${d.terms.map(t=>`<div><dt>${t[0]}</dt><dd>${t[1]}</dd></div>`).join('')}</dl></section>
+<section class="panel film" id="film"><h2>מה קורה לצילום המסך כאן?</h2><canvas role="img" aria-label="אנימציית הסבר עם כתוביות"></canvas><p class="capt" aria-live="polite"></p><div class="row"><button class="btn" id="play">צפייה בסרטון</button><div class="bar"><span></span></div><span class="mut">${Math.round(VOICE[n]?VOICE[n].total:28)} שניות</span></div>${VOICE[n]?'<p class="mut">הקריינות נוצרה בבינה מלאכותית. הטקסט המלא מופיע ככתוביות.</p>':''}</section>
+<section class="three">${d.roles.map(r=>`<div class="panel"><h2 class="tint">${r[0]}</h2><p>${r[1]}</p></div>`).join('')}</section>
+<p class="lead">${d.note}</p>
+<section class="panel"><h2>איך זה נשמע במוקד?</h2><blockquote>״${d.tk[0]}״</blockquote><div><h3 class="tint">מה כדאי לשאול</h3><p>״${d.tk[1]}״</p></div><div><h3 class="tint">מה נלמד מהתשובה</h3><p>${d.tk[2]}</p></div></section>
+<section class="panel"><h2>${d.gt}</h2>${g}</section>${quizHTML('q'+n,d.q)}${gateHTML('layer'+n,NEXT['layer'+n])}`,init(){film(n);({7:()=>match('g7'),6:g6,5:g5})[n]();quiz('q'+n,d.q)}}}
+const VIEW={
+home:()=>({html:`<section class="panel home" style="background:none;box-shadow:none"><h1 class="logo" tabindex="-1"><span class="a">BEHIND THE</span><span class="b grad">SCREEN</span></h1><span class="mirror grad" aria-hidden="true">SCREEN</span><p class="lead">״אני לא מצליחה להיכנס למערכת.״ מה מסתתר מאחורי הפנייה?</p><button class="btn" id="go">${S.max>0?'המשך המסע':'כניסה לרשת'}</button><p class="mut">מסע בשכבות 7, 6 ו־5 של מודל OSI, כ־15 דקות</p></section>`,init(){$('#go').onclick=()=>{S.max=Math.max(1,S.max);save();go(Math.min(S.max,PAGES.length-1))}}}),
+basics:VIEWB,
+send:()=>({html:`<section style="display:grid;gap:18px"><h1 tabindex="-1">מה קורה <span class="tint">מאחורי המסך?</span></h1><p class="lead">מודל OSI מתאר תקשורת בשבע שכבות של תפקידים. נעקוב אחרי צילום מסך של תקלה בשלוש העליונות.</p></section>
+<section class="panel compose" id="comp"><h2>פנייה חדשה למוקד</h2><p>״מופיעה לי שגיאה במערכת. מצורף צילום מסך.״</p><canvas id="prev" width="480" height="320" role="img" aria-label="צילום מסך של הודעת שגיאה"></canvas><div class="row"><button class="btn" id="snd">שליחה</button></div></section>
+<section class="panel" id="stk" hidden><div class="stackwrap"><div class="stage" role="img" aria-label="המסך מסתובב ונפרד לשלוש שכבות"><div class="stk">${[0,5,6,7].map(n=>`<div class="slab" data-n="${n}" style="--c:${n?COL[n]:'#4a4f86'}">${[0,1,2,3,4].map(i=>`<u style="transform:translateZ(${i*1.6}px)"></u>`).join('')}<div class="face" style="transform:translateZ(8.5px)">${n===7?'<canvas width="480" height="320"></canvas>':n?`<div class="card" style="width:80%;aspect-ratio:1.5;background:none;box-shadow:none;--c:${COL[n]}"><style>.face .card::before{display:none}</style>${ICON[n]}</div>`:''}</div></div>`).join('')}</div></div>
+<ul class="legend">${[7,6,5].map(n=>`<li style="--c:${COL[n]}"><b>${n} · ${NAME[n]}</b>${{7:'יישום: שירותי תקשורת',6:'ייצוג: צורת הנתונים',5:'שיחה: הקמה, ניהול וסיום'}[n]}</li>`).join('')}<li style="--c:#b3b8e2"><b>4–1</b>הבסיס להעברת הנתונים. להקשר בלבד.</li></ul></div><div class="row"><button class="btn soft" id="rep">צפייה חוזרת</button><input type="range" id="scrub" min="0" max="1000" value="0" aria-label="מיקום באנימציה" disabled></div><p class="mut">השכבות הן מפת תפקידים. במערכת אמיתית תוכנה אחת יכולה למלא כמה תפקידים.</p></section>${gateHTML('send',NEXT.send)}`,
+ init(){$('#prev').getContext('2d').drawImage(shot,0,0);$('.slab[data-n="7"] canvas').getContext('2d').drawImage(shot,0,0);let live=true,id=0;loops.push(()=>live=false);const sl=$$('.slab'),st=$('.stk'),lg=$$('.legend li'),sc=$('#scrub');
+ const pose=t=>{const r=ease(seg(t,.2,.55)),s=ease(seg(t,.6,.95));st.style.transform=`translateY(${s*(innerWidth<800?92:112)}px) rotateX(${r*57}deg) rotateZ(${r*-34}deg) scale(${1-.14*s})`;sl.forEach((e,i)=>{e.style.transform=`translateZ(${i*lerp(10,innerWidth<800?82:104,s)}px)`;});lg.forEach((l,i)=>l.style.setProperty('--o',lerp(.12,1,seg(t,.62+i*.08,.76+i*.08))));sc.value=t*1000};
+ const play=()=>{const me=++id,t0=performance.now();let nx=0;sc.disabled=!S.done['film-send'];(function f(now){if(!live||me!==id)return;const t=calm?1:clamp(((now||performance.now())-t0)/8500);pose(t);if(!calm&&nx<3&&t>.62+nx*.1)Snd.play('split',nx++);if(t<1)requestAnimationFrame(f);else{finish('film-send');sc.disabled=false}})()};
+ const open=()=>{$('#comp').hidden=true;$('#stk').hidden=false};sc.oninput=()=>{id++;pose(sc.value/1000)};$('#rep').onclick=play;$('#snd').onclick=()=>{open();play();$('.stage').scrollIntoView({block:'center'})};if(S.done['film-send']){open();pose(1);sc.disabled=false}}}),
+layer7:()=>layerPage(7),layer6:()=>layerPage(6),layer5:()=>layerPage(5),
+compare:()=>({html:`<section style="display:grid;gap:18px"><h1 tabindex="-1">שלוש שכבות, <span class="tint">שלושה תפקידים</span></h1><p class="lead">התפקידים משתלבים באותה תוכנה. הם אינם שלושה צעדים שהמשתמשים מבצעים.</p></section><div class="cards">${[7,6,5].map(card).join('')}</div>
+<section class="panel tbl"><table><thead><tr><th></th><th style="color:${COL[7]}">7 · יישום</th><th style="color:${COL[6]}">6 · ייצוג</th><th style="color:${COL[5]}">5 · שיחה</th></tr></thead><tbody><tr><th>התפקיד</th><td>שירותי תקשורת ליישומים</td><td>צורת הנתונים ופירושם</td><td>הקמה, ניהול וסיום</td></tr><tr><th>השאלה</th><td>איזה שירות מבקשים?</td><td>איך המידע מיוצג?</td><td>איך השיחה מתנהלת?</td></tr><tr><th>דוגמה</th><td>בקשת דף ב־HTTP</td><td>קריאת טקסט ב־UTF-8</td><td>סיום מסודר של שיחה</td></tr></tbody></table></section>
+<section class="panel"><h2>איזה תפקיד מתואר?</h2>${matchHTML('gc')}</section>${gateHTML('compare',NEXT.compare)}`,init(){match('gc')}}),
+tickets:()=>({html:`<section style="display:grid;gap:18px"><h1 tabindex="-1">חמש פניות <span class="tint">מחכות במוקד</span></h1><p class="lead">יש לבחור שאלה שמוסיפה מידע, בלי לקבוע מראש מה התקלקל. אפשר לענות בכל סדר ולנסות שוב.</p></section>${T.map((t,i)=>quizHTML('t'+(i+1),t)).join('')}${gateHTML('tickets',NEXT.tickets)}`,init(){T.forEach((t,i)=>quiz('t'+(i+1),t))}}),
+finish:()=>({html:`<section style="display:grid;gap:18px;justify-items:center;text-align:center"><h1 tabindex="-1">המסע <span class="tint">הושלם</span></h1><p class="lead">מהיום, מאחורי כל פנייה יש שאלה טובה: איזה שירות, איזה ייצוג, איזו שיחה, ומה עדיין לא ידוע.</p></section><div class="cards">${[7,6,5].map(card).join('')}</div><section class="panel gate"><p>אפשר לחזור לכל שלב מהסרגל.</p><button class="btn soft" id="rst">התחלה מחדש</button></section>`,init(){Snd.play('finish');const b=$('#rst');b.onclick=()=>{if(!b.dataset.y){b.dataset.y=1;b.textContent='למחוק את ההתקדמות? לחיצה נוספת לאישור';return}S={max:0,done:{}};save();go(0)}}})};
+function nav(){$('#nav').innerHTML=PAGES.map((p,i)=>`<li><button data-p="${i}" ${i>S.max?'disabled':''} ${i===cur?'aria-current="page"':''}>${p[1]}${i>S.max?'<span aria-label="נעול"> 🔒</span>':''}</button></li>`).join('');$$('[data-p]').forEach(b=>b.onclick=()=>go(+b.dataset.p));const a=$('[aria-current]');if(a&&a.parentNode.parentNode.scrollWidth>a.parentNode.parentNode.clientWidth)a.scrollIntoView({inline:'center',block:'nearest'})}
+function show(i,focus){loops.forEach(f=>f());loops=[];cur=i;const k=PAGES[i][0],n=+k.slice(5)||0,v=VIEW[k]();$('#app').style.setProperty('--c',COL[k.startsWith('layer')?n:0]);$('#app').innerHTML=v.html;nav();v.init&&v.init();const x=$('#next');if(x){x.onclick=()=>go(i+1);paintGate()}scrollTo(0,0);if(focus)$('h1').focus({preventScroll:true});if(location.hash.slice(1)!==k)history.replaceState(null,'','#'+k)}
+function go(i){if(i>S.max)return;if(i===cur){return}const k=PAGES[i][0],n=k.startsWith('layer')?+k.slice(5):0;const CAP={7:'שכבה 7: עוטפים בבקשה',6:'שכבה 6: מפרקים לפיקסלים',5:'שכבה 5: פותחים שיחה'};if(n)portal(n,CAP[n],()=>show(i,true));else if(cur===0)portal(0,'מתחברים',()=>show(i,true));else show(i,true)}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3500)}
+function route(first){let i=PAGES.findIndex(p=>p[0]===location.hash.slice(1));if(i<0)i=0;if(i>S.max){i=S.max;toast('השלב הזה ייפתח אחרי השלמת השלבים שלפניו.')}if(first)show(i);else if(i!==cur)go(i);else history.replaceState(null,'','#'+PAGES[cur][0])}
+addEventListener('hashchange',()=>route(false));route(true);
+</script>
+</body>
+</html>
